@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "restapi"
+version = "0.1.0"
+description = ""
+authors = ["AusAura <91804331+AusAura@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.104.1"
+uvicorn = {extras = ["standard"], version = "^0.23.2"}
+sqlalchemy = "^2.0.22"
+psycopg2 = "^2.9.9"
+alembic = "^1.12.1"
+
+[tool.poetry.group.dev.dependencies]
+icecream = "^2.1.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
