@@ -22,7 +22,7 @@ async def check_birthdays(limit: int = 7, db: Session = Depends(get_db)):
     contacts = await repository_contacts.get_upcoming_birthdays(limit, db)
     return contacts
 
-@router.get('/{fullname}', response_model=ContactModel)
+@router.get('/{query}', response_model=ContactModel)
 async def read_contact(query: str, db: Session = Depends(get_db)):
     contact = await repository_contacts.get_contact(query, db)
     if contact is None:
@@ -37,16 +37,16 @@ async def create_contact(body: ContactModel, db: Session = Depends(get_db)):
         ic(e.errors)
         return {'detail': e.errors}
 
-@router.put('/{fullname}', response_model=ContactModel)
-async def update_contact(body: ContactModel, fullname: str, db: Session = Depends(get_db)):
-    contact = await repository_contacts.update_contact(fullname, body, db)
+@router.put('/{contact_id}', response_model=ContactModel)
+async def update_contact(body: ContactModel, contact_id: int, db: Session = Depends(get_db)):
+    contact = await repository_contacts.update_contact(contact_id, body, db)
     if contact is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Contact was not found')
     return contact
 
-@router.delete('/{fullname}', response_model=ContactModel)
-async def remove_contact(fullname: str, db: Session = Depends(get_db)):
-    contact = await repository_contacts.remove_contact(fullname, db)
+@router.delete('/{contact_id}', response_model=ContactModel)
+async def remove_contact(contact_id: int, db: Session = Depends(get_db)):
+    contact = await repository_contacts.remove_contact(contact_id, db)
     if contact is None:    
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Contact was not found')
     return contact

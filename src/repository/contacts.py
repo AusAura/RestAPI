@@ -40,8 +40,9 @@ async def create_contact(body: ContactModel, db: Session) -> Contact:
     db.refresh(contact)
     return contact
 
-async def update_contact(fullname: str, body: ContactModel, db: Session) -> Contact | None:
-    contact = db.query(Contact).filter(Contact.fullname.like(f"%{fullname}%")).first()
+async def update_contact(contact_id: int, body: ContactModel, db: Session) -> Contact | None:
+    # contact = db.query(Contact).filter(Contact.fullname.like(f"%{fullname}%")).first()
+    contact = db.query(Contact).filter(Contact.id == contact_id).first()
     if contact:
         contact.fullname=body.fullname
         contact.email = body.email
@@ -51,8 +52,9 @@ async def update_contact(fullname: str, body: ContactModel, db: Session) -> Cont
         db.commit()
     return contact
 
-async def remove_contact(fullname: str, db: Session) -> Contact | None:
-    contact = db.query(Contact).filter(Contact.fullname.like(f"%{fullname}%")).first()
+async def remove_contact(contact_id: int, db: Session) -> Contact | None:
+    # contact = db.query(Contact).filter(Contact.fullname.like(f"%{fullname}%")).first()
+    contact = db.query(Contact).filter(Contact.id == contact_id).first()
     if contact:
         db.delete(contact)
         db.commit()
