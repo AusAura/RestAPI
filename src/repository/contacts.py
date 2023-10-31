@@ -1,5 +1,8 @@
+from icecream import ic
+
 from typing import List
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from src.database.models import Contact
 from src.schemas import ContactModel
@@ -17,9 +20,19 @@ async def get_contact(query: str, db: Session) -> Contact:
     return result
 
 async def get_upcoming_birthdays(days_range: int, db: Session) -> List[Contact]:
-    today = datetime.now().date()
-    range = today + timedelta(days=days_range)
-    upcoming_birthdays = db.query(Contact).filter(Contact.birthday.between(today, range)).all()
+    today = ic(datetime.now().date())
+    end_of_year = datetime(today.year, 12, 31).date()
+    days_left = ic((end_of_year - today).days)
+
+    if days_range > days_left:
+        days_range = days_left
+
+    end = ic(today + timedelta(days=days_range))
+    
+    today_date = ic(today.strftime('%m-%d'))
+    end_date = ic(end.strftime('%m-%d'))
+
+    upcoming_birthdays = db.query(Contact).filter(func.to_char(Contact.birthday, 'MM-DD').between(today_date, end_date)).all()
     return upcoming_birthdays
 
 # async def get_upcoming_birthdays(limit: int, db: Session) -> List[Contact]:
