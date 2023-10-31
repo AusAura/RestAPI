@@ -16,18 +16,24 @@ async def get_contact(query: str, db: Session) -> Contact:
     result = db.query(Contact).filter(Contact.email.like(f"%{query}%")).first()
     return result
 
-async def get_upcoming_birthdays(limit: int, db: Session) -> List[Contact]:
+async def get_upcoming_birthdays(days_range: int, db: Session) -> List[Contact]:
     today = datetime.now().date()
-    upcoming_birthdays = db.query(Contact).all()
-    upcoming_birthdays = sorted(
-        upcoming_birthdays,
-        key=lambda contact: (
-            (contact.birthday.month, contact.birthday.day) 
-            if (contact.birthday.month, contact.birthday.day) >= (today.month, today.day) 
-            else (contact.birthday.month + 12, contact.birthday.day)
-        )
-    )
-    return upcoming_birthdays[:limit]
+    range = today + timedelta(days=days_range)
+    upcoming_birthdays = db.query(Contact).filter(Contact.birthday.between(today, range)).all()
+    return upcoming_birthdays
+
+# async def get_upcoming_birthdays(limit: int, db: Session) -> List[Contact]:
+#     today = datetime.now().date()
+#     upcoming_birthdays = db.query(Contact).all()
+#     upcoming_birthdays = sorted(
+#         upcoming_birthdays,
+#         key=lambda contact: (
+#             (contact.birthday.month, contact.birthday.day) 
+#             if (contact.birthday.month, contact.birthday.day) >= (today.month, today.day) 
+#             else (contact.birthday.month + 12, contact.birthday.day)
+#         )
+#     )
+#     return upcoming_birthdays[:limit]
 
 async def create_contact(body: ContactModel, db: Session) -> Contact:
     contact = Contact(fullname=body.fullname,

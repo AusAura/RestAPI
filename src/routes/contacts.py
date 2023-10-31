@@ -18,8 +18,8 @@ async def read_contacts(skip: int = 0, limit: int = 20, db: Session = Depends(ge
     return contacts
 
 @router.get('/bd', response_model=List[ContactModel])
-async def check_birthdays(limit: int = 7, db: Session = Depends(get_db)):
-    contacts = await repository_contacts.get_upcoming_birthdays(limit, db)
+async def check_birthdays(days_range: int = 7, db: Session = Depends(get_db)):
+    contacts = await repository_contacts.get_upcoming_birthdays(days_range, db)
     return contacts
 
 @router.get('/{query}', response_model=ContactModel)
