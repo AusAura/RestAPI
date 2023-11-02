@@ -1,12 +1,16 @@
 from fastapi import FastAPI
 from icecream import ic
-from src.routes import contacts
+from src.routes import contacts, auth
+
+# alembic revision --autogenerate -m 'Init'
+# alembic upgrade head
 
 # uvicorn main:app --host localhost --port 8000 --reload
 
 app = FastAPI()
 
 app.include_router(contacts.router, prefix='/api')
+app.include_router(auth.router, prefix='/api')
 
 @app.middleware("http")
 async def log_requests(request, call_next):
