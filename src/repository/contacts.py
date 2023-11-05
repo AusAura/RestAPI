@@ -79,3 +79,10 @@ async def remove_contact(contact_id: int, user: User, db: Session) -> Contact | 
         db.delete(contact)
         db.commit()
     return contact
+
+
+async def update_avatar(contact_id: int, url: str, db: Session) -> User:
+    contact = db.query(Contact).filter(Contact.id == contact_id).first()
+    contact.avatar = url
+    db.commit()
+    return contact

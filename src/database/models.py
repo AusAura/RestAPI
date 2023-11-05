@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, func
+from sqlalchemy import Column, Integer, String, func, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.schema import ForeignKey
 from sqlalchemy.sql.sqltypes import DateTime, Date
@@ -16,6 +16,7 @@ class Contact(Base):
     additional = Column(String(500), nullable=True)
     user_id = Column('user_id', ForeignKey('users.id', ondelete='CASCADE'), default=None)
     user = relationship('User', backref='contacts')
+    avatar = Column(String(500), nullable=True)
 
 
 class User(Base):
@@ -26,3 +27,4 @@ class User(Base):
     password = Column(String(250), nullable=False)
     created_at = Column('created_at', DateTime, default=func.now())
     refresh_token = Column(String(255), nullable=True)
+    confirmed = Column(Boolean, default=False)
