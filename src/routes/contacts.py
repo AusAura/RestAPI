@@ -24,18 +24,53 @@ router = APIRouter(prefix='/contacts', tags=['contacts'])
 @router.get('/', response_model=List[ContactModel], description='No more than 10 requests per minute',
             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
 async def read_contacts(skip: int = 0, limit: int = 20, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
+    """
+    Shows full list of contacts for user
+
+    :param skip: 
+    :type skip: int
+    :param limit:
+    :type limit: int
+    :param user:
+    :type user: User
+    :param db:
+    :type db: Session
+    :rtype: List[Contact]
+    """
     contacts = await repository_contacts.get_contacts(skip, limit, current_user, db)
     return contacts
 
 @router.get('/bd', response_model=List[ContactModel], description='No more than 10 requests per minute',
             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
 async def check_birthdays(days_range: int = 7, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
+    """
+    Checks the birthdays in the set range but only to the end of the year.
+
+    :param days_range: A range in which bdays will be shown. If days_range > days left until the end of the year, it will search only until the end of it.
+    :type skip: int
+    :param user:
+    :type user: User
+    :param db:
+    :type db: Session
+    :rtype: List[Contact]
+    """
     contacts = await repository_contacts.get_upcoming_birthdays(days_range, current_user, db)
     return contacts
 
 @router.get('/{query}', response_model=ContactModel, description='No more than 10 requests per minute',
             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
 async def read_contact(query: str, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
+    """
+    Shows one contact for user
+
+    :param query: A part of fullname or email address that is used for query to find the contact.
+    :type query: str
+    :param user:
+    :type user: User
+    :param db:
+    :type db: Session
+    :rtype: Contact
+    """
     contact = await repository_contacts.get_contact(query, current_user, db)
     if contact is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Contact was not found')
@@ -44,6 +79,17 @@ async def read_contact(query: str, current_user: User = Depends(auth_service.get
 @router.post("/", response_model=ContactModel, status_code=status.HTTP_201_CREATED, description='No more than 2 requests per minute',
             dependencies=[Depends(RateLimiter(times=2, seconds=60))])
 async def create_contact(body: ContactModel, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
+    """
+    Creates a new contact.
+
+    :param body: Data for contact.
+    :type skip: ContactModel
+    :param user:
+    :type user: User
+    :param db:
+    :type db: Session
+    :rtype: Contact
+    """
     try:
         return await repository_contacts.create_contact(body, current_user, db)
     except ValidationError as e:
@@ -53,6 +99,19 @@ async def create_contact(body: ContactModel, current_user: User = Depends(auth_s
 @router.put('/{contact_id}', response_model=ContactModel, description='No more than 10 requests per minute',
             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
 async def update_contact(body: ContactModel, contact_id: int, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
+    """
+    Updates the contact by contact_id. Returns None if contact with contact_id does not exist.
+
+    :param contact_id: The ID of the contact.
+    :type contact_id: int
+    :param body: Data for the contact.
+    :type limit: ContactModel
+    :param user:
+    :type user: User
+    :param db:
+    :type db: Session
+    :rtype: Contact
+    """
     contact = await repository_contacts.update_contact(contact_id, body, current_user, db)
     if contact is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Contact was not found')
@@ -61,6 +120,17 @@ async def update_contact(body: ContactModel, contact_id: int, current_user: User
 @router.patch('/{contact_id}/avatar')
 async def update_avatar_contact(contact_id, file: UploadFile = File(), current_user: User = Depends(auth_service.get_current_user),
                              db: Session = Depends(get_db)):
+    """
+    Updates the avatar URL for contact with contact_id. Returns None if contact with contact_id does not exist.
+
+    :param contact_id: The ID of the contact.
+    :type contact_id: int
+    :param url: An URL for the avator on the cloud server..
+    :type url: str
+    :param db:
+    :type db: Session
+    :rtype: Contact | None
+    """
     cloudinary.config(
         cloud_name=settings.cloudinary_name,
         api_key=settings.cloudinary_api_key,
@@ -77,6 +147,17 @@ async def update_avatar_contact(contact_id, file: UploadFile = File(), current_u
 @router.delete('/{contact_id}', response_model=ContactModel, description='No more than 10 requests per minute',
             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
 async def remove_contact(contact_id: int, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
+    """
+    Removes the contact by contact_id. Returns None if contact with contact_id does not exist.
+
+    :param contact_id: The ID of the contact.
+    :type contact_id: int
+    :param user:
+    :type user: User
+    :param db:
+    :type db: Session
+    :rtype: Contact
+    """
     contact = await repository_contacts.remove_contact(contact_id, current_user, db)
     if contact is None:    
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Contact was not found')

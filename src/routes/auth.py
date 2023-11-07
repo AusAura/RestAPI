@@ -25,6 +25,15 @@ security = HTTPBearer()
 @router.post('/signup', response_model=UserResponce, status_code=status.HTTP_201_CREATED, description='No more than 2 requests per minute',
             dependencies=[Depends(RateLimiter(times=2, seconds=60))])
 async def signup(body: UserModel, db: Session = Depends(get_db)):
+    """
+    Signup user.
+
+    :param body: The passed data for signup.
+    :type body: UserModel
+    :param db:
+    :type db: Session
+    :rtype: JSON
+    """
     exist_user = await repository_users.get_user_by_email(body.email, db)
     if exist_user:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Already exists')
@@ -43,6 +52,15 @@ async def signup(body: UserModel, db: Session = Depends(get_db)):
             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
 async def login(body: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = await repository_users.get_user_by_email(body.username, db)
+    """
+    Login for signed up user. Denies attempt if user not exist, email not confirmed, password not correct.
+
+    :param body: The passed data for login.
+    :type body: OAuth2PasswordRequestForm
+    :param db:
+    :type db: Session
+    :rtype: JSON
+    """    
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Wrong user')
     if not user.confirmed:
@@ -58,6 +76,15 @@ async def login(body: OAuth2PasswordRequestForm = Depends(), db: Session = Depen
 @router.get('/refresh_token', response_model=TokenModel, description='No more than 10 requests per minute',
             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
 async def refresh_token(credentials: HTTPAuthorizationCredentials = Security(security), db: Session = Depends(get_db)):
+    """
+    Get new access token for user. Or null current refresh token in DB if the one that sent is outdated.
+
+    :param credentials: Data for 'Authorization' header that includes 'Bearer' and the token.
+    :type credentials: HTTPAuthorizationCredentials
+    :param db:
+    :type db: Session
+    :rtype: JSON
+    """    
     token = credentials.credentials
     email = await auth_service.decode_refresh_token(token)
     user = await repository_users.get_user_by_email(email, db)
@@ -73,8 +100,16 @@ async def refresh_token(credentials: HTTPAuthorizationCredentials = Security(sec
 
 @router.post('/request_email', description='No more than 10 requests per minute',
             dependencies=[Depends(RateLimiter(times=2, seconds=60))])
-async def request_email(body: RequestEmail, background_tasks: BackgroundTasks,
-                        db: Session = Depends(get_db)):
+async def request_email(body: RequestEmail, db: Session = Depends(get_db)):
+    """
+    Request for new verification email. Sends it or denies attempt if already confirmed.
+
+    :param body: A class that contains .email (and possibly something else)
+    :type body: RequestEmail
+    :param db:
+    :type db: Session
+    :rtype: JSON
+    """ 
     user = await repository_users.get_user_by_email(body.email, db)
 
     if user.confirmed:
@@ -91,7 +126,15 @@ async def request_email(body: RequestEmail, background_tasks: BackgroundTasks,
 @router.post('/reset_pwd', description='No more than 10 requests per minute',
             dependencies=[Depends(RateLimiter(times=2, seconds=60))])
 async def reset_pwd(body: RequestEmail, db: Session = Depends(get_db)):
+    """
+    Sends an email with reset password. Denies if user does not exist. Requires email address.
 
+    :param body: A class that contains .email of the user (and possibly something else)
+    :type body: RequestEmail
+    :param db:
+    :type db: Session
+    :rtype: JSON
+    """ 
     user = await repository_users.get_user_by_email(body.email, db)
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Wrong user')

@@ -11,6 +11,15 @@ router = APIRouter(prefix='/email', tags=['email'])
 @router.get("/confirm/{email_token}", description='No more than 10 requests per minute',
             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
 async def confirmed_email(email_token: str, db: Session = Depends(get_db)):
+    """
+    Confirms email for the user that owns that email_token. Denies if already confirmed.
+
+    :param email_token: The email token that was generated in the verification email for the user.
+    :type email_token: str
+    :param db:
+    :type db: Session
+    :rtype: JSON
+    """
     email = await auth_service.get_email_from_token(email_token)
     user = await repository_users.get_user_by_email(email, db)
     if user is None:

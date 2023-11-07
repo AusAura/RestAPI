@@ -7,6 +7,8 @@ class ContactModel(BaseModel):
     phone_number: int
     birthday: date
     additional: str = Field(max_length=500)
+    user_id: int
+    avatar: str
 
     class Config:
         orm_mode = True
