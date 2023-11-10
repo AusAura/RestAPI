@@ -6,10 +6,12 @@ from src.repository import users as repository_users
 from src.services.auth import auth_service
 from fastapi_limiter.depends import RateLimiter
 
+
 router = APIRouter(prefix='/email', tags=['email'])
 
-@router.get("/confirm/{email_token}", description='No more than 10 requests per minute',
-            dependencies=[Depends(RateLimiter(times=10, seconds=60))])
+# @router.get("/confirm/{email_token}", description='No more than 10 requests per minute',
+#             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
+@router.get("/confirm/{email_token}", description='No more than 10 requests per minute')
 async def confirmed_email(email_token: str, db: Session = Depends(get_db)):
     """
     Confirms email for the user that owns that email_token. Denies if already confirmed.

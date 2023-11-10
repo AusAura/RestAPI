@@ -23,17 +23,17 @@ engine = create_engine(
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-@pytest.fixture(scope="session", autouse=True)
-def initialize_fastapi_limiter():
-    ic('started mock redis')
+# @pytest.fixture(scope="session", autouse=True)
+# def initialize_fastapi_limiter():
+#     ic('started mock redis')
 
-    def override_dependency(q: str | None = None):
-        return {"q": q, "skip": 5, "limit": 10}
+#     def override_dependency(q: str | None = None):
+#         return {"q": q, "skip": 5, "limit": 10}
     
-    app.dependency_overrides[RateLimiter] = override_dependency
+#     app.dependency_overrides[RateLimiter] = override_dependency
       
-    r_mock = MagicMock(spec=redis.Redis)
-    FastAPILimiter.init(r_mock)
+#     r_mock = MagicMock(spec=redis.Redis)
+#     FastAPILimiter.init(r_mock)
 
   
 @pytest.fixture(scope='module')
@@ -75,7 +75,7 @@ def contact():
     return {'fullname': 'testtest',
             'email': 'test@mail.com',
             'phone_number': 0,
-            'birthday': date(year=2022, month=2, day=13),
+            'birthday': str(date(year=2022, month=2, day=13)),
             'additional': 'test',
             'user_id': 1,
             'avatar': 'test-url'

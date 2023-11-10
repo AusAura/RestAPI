@@ -19,11 +19,20 @@ from src.repository import contacts as repository_contacts
 from pydantic import ValidationError
 from fastapi_limiter.depends import RateLimiter
 
+from src.services.slowapi import limiter
+from fastapi import Request
+
+# from fastapi import Request
+# from src.services.slowapi import limiter
+# from main import contacts_router as router
+
 router = APIRouter(prefix='/contacts', tags=['contacts'])
 
-@router.get('/', response_model=List[ContactModel], description='No more than 10 requests per minute',
-            dependencies=[Depends(RateLimiter(times=10, seconds=60))])
-async def read_contacts(skip: int = 0, limit: int = 20, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
+# @router.get('/', response_model=List[ContactModel], description='No more than 10 requests per minute',
+#             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
+@router.get('/', response_model=List[ContactModel], description='No more than 10 requests per minute')
+@limiter.limit("10/minute")
+async def read_contacts(request: Request, skip: int = 0, limit: int = 20, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
     """
     Shows full list of contacts for user
 
@@ -37,12 +46,15 @@ async def read_contacts(skip: int = 0, limit: int = 20, current_user: User = Dep
     :type db: Session
     :rtype: List[Contact]
     """
+    ic('I\'m fine until the function')
     contacts = await repository_contacts.get_contacts(skip, limit, current_user, db)
     return contacts
 
-@router.get('/bd', response_model=List[ContactModel], description='No more than 10 requests per minute',
-            dependencies=[Depends(RateLimiter(times=10, seconds=60))])
-async def check_birthdays(days_range: int = 7, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
+# @router.get('/bd', response_model=List[ContactModel], description='No more than 10 requests per minute',
+#             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
+@router.get('/bd', response_model=List[ContactModel], description='No more than 10 requests per minute')
+@limiter.limit("10/minute")
+async def check_birthdays(request: Request, days_range: int = 7, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
     """
     Checks the birthdays in the set range but only to the end of the year.
 
@@ -57,9 +69,11 @@ async def check_birthdays(days_range: int = 7, current_user: User = Depends(auth
     contacts = await repository_contacts.get_upcoming_birthdays(days_range, current_user, db)
     return contacts
 
-@router.get('/{query}', response_model=ContactModel, description='No more than 10 requests per minute',
-            dependencies=[Depends(RateLimiter(times=10, seconds=60))])
-async def read_contact(query: str, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
+# @router.get('/{query}', response_model=ContactModel, description='No more than 10 requests per minute',
+#             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
+@router.get('/{query}', response_model=ContactModel, description='No more than 10 requests per minute')
+@limiter.limit("10/minute")
+async def read_contact(request: Request, query: str, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
     """
     Shows one contact for user
 
@@ -76,9 +90,11 @@ async def read_contact(query: str, current_user: User = Depends(auth_service.get
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Contact was not found')
     return contact
 
-@router.post("/", response_model=ContactModel, status_code=status.HTTP_201_CREATED, description='No more than 2 requests per minute',
-            dependencies=[Depends(RateLimiter(times=2, seconds=60))])
-async def create_contact(body: ContactModel, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
+# @router.post("/", response_model=ContactModel, status_code=status.HTTP_201_CREATED, description='No more than 2 requests per minute',
+#             dependencies=[Depends(RateLimiter(times=2, seconds=60))])
+@router.post("/", response_model=ContactModel, status_code=status.HTTP_201_CREATED, description='No more than 2 requests per minute')
+@limiter.limit("2/minute")
+async def create_contact(request: Request, body: ContactModel, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
     """
     Creates a new contact.
 
@@ -96,9 +112,11 @@ async def create_contact(body: ContactModel, current_user: User = Depends(auth_s
         ic(e.errors)
         return {'detail': e.errors}
 
-@router.put('/{contact_id}', response_model=ContactModel, description='No more than 10 requests per minute',
-            dependencies=[Depends(RateLimiter(times=10, seconds=60))])
-async def update_contact(body: ContactModel, contact_id: int, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
+# @router.put('/{contact_id}', response_model=ContactModel, description='No more than 10 requests per minute',
+#             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
+@router.put('/{contact_id}', response_model=ContactModel, description='No more than 10 requests per minute')
+@limiter.limit("10/minute")
+async def update_contact(request: Request, body: ContactModel, contact_id: int, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
     """
     Updates the contact by contact_id. Returns None if contact with contact_id does not exist.
 
@@ -118,7 +136,8 @@ async def update_contact(body: ContactModel, contact_id: int, current_user: User
     return contact
 
 @router.patch('/{contact_id}/avatar')
-async def update_avatar_contact(contact_id, file: UploadFile = File(), current_user: User = Depends(auth_service.get_current_user),
+@limiter.limit("10/minute")
+async def update_avatar_contact(request: Request, contact_id, file: UploadFile = File(), current_user: User = Depends(auth_service.get_current_user),
                              db: Session = Depends(get_db)):
     """
     Updates the avatar URL for contact with contact_id. Returns None if contact with contact_id does not exist.
@@ -144,9 +163,11 @@ async def update_avatar_contact(contact_id, file: UploadFile = File(), current_u
     contact = await repository_contacts.update_avatar(contact_id, src_url, db)
     return contact
 
-@router.delete('/{contact_id}', response_model=ContactModel, description='No more than 10 requests per minute',
-            dependencies=[Depends(RateLimiter(times=10, seconds=60))])
-async def remove_contact(contact_id: int, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
+# @router.delete('/{contact_id}', response_model=ContactModel, description='No more than 10 requests per minute',
+#             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
+@router.delete('/{contact_id}', response_model=ContactModel, description='No more than 10 requests per minute')
+@limiter.limit("10/minute")
+async def remove_contact(request: Request, contact_id: int, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
     """
     Removes the contact by contact_id. Returns None if contact with contact_id does not exist.
 

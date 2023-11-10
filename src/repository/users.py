@@ -5,7 +5,7 @@ from src.schemas import UserModel
 
 from icecream import ic
 
-async def get_user_by_email(email: str, db: Session) -> User | []:
+async def get_user_by_email(email: str, db: Session) -> User:
     """
     Returns user that have that email. Empty if fails.
 
@@ -17,7 +17,7 @@ async def get_user_by_email(email: str, db: Session) -> User | []:
     """
     return db.query(User).filter(User.email == email).first()
 
-async def create_user(body: UserModel, db: Session) -> User | []:
+async def create_user(body: UserModel, db: Session) -> User:
     """
     Creates the user with the passed data. Empty if fails.
 

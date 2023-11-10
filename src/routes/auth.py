@@ -1,5 +1,6 @@
 # from typing import List
 from icecream import ic
+# from main import limiter, auth_router as router
 
 from fastapi import APIRouter, HTTPException, Depends, status, Security
 from fastapi.security import OAuth2PasswordRequestForm, HTTPAuthorizationCredentials, HTTPBearer
@@ -22,8 +23,9 @@ security = HTTPBearer()
 # bg_tasks = BackgroundTasks()
 
 
-@router.post('/signup', response_model=UserResponce, status_code=status.HTTP_201_CREATED, description='No more than 2 requests per minute',
-            dependencies=[Depends(RateLimiter(times=2, seconds=60))])
+# @router.post('/signup', response_model=UserResponce, status_code=status.HTTP_201_CREATED, description='No more than 2 requests per minute',
+#             dependencies=[Depends(RateLimiter(times=2, seconds=60))])
+@router.post('/signup', response_model=UserResponce, status_code=status.HTTP_201_CREATED, description='No more than 2 requests per minute')
 async def signup(body: UserModel, db: Session = Depends(get_db)):
     """
     Signup user.
@@ -48,8 +50,9 @@ async def signup(body: UserModel, db: Session = Depends(get_db)):
     return {'user': new_user, 'detail': 'Successfully created'}
 
 
-@router.post('/login', response_model=TokenModel, description='No more than 10 requests per minute',
-            dependencies=[Depends(RateLimiter(times=10, seconds=60))])
+# @router.post('/login', response_model=TokenModel, description='No more than 10 requests per minute',
+#             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
+@router.post('/login', response_model=TokenModel, description='No more than 10 requests per minute')
 async def login(body: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = await repository_users.get_user_by_email(body.username, db)
     """
@@ -73,8 +76,9 @@ async def login(body: OAuth2PasswordRequestForm = Depends(), db: Session = Depen
     await repository_users.update_token(user, refresh_token, db)
     return {'access_token': access_token, 'refresh_token': refresh_token, 'token_type': 'bearer'}
 
-@router.get('/refresh_token', response_model=TokenModel, description='No more than 10 requests per minute',
-            dependencies=[Depends(RateLimiter(times=10, seconds=60))])
+# @router.get('/refresh_token', response_model=TokenModel, description='No more than 10 requests per minute',
+#             dependencies=[Depends(RateLimiter(times=10, seconds=60))])
+@router.get('/refresh_token', response_model=TokenModel, description='No more than 10 requests per minute')
 async def refresh_token(credentials: HTTPAuthorizationCredentials = Security(security), db: Session = Depends(get_db)):
     """
     Get new access token for user. Or null current refresh token in DB if the one that sent is outdated.
@@ -98,8 +102,9 @@ async def refresh_token(credentials: HTTPAuthorizationCredentials = Security(sec
     return {'access_token': access_token, 'refresh_token': refresh_token, 'token_type': 'bearer'}
 
 
-@router.post('/request_email', description='No more than 10 requests per minute',
-            dependencies=[Depends(RateLimiter(times=2, seconds=60))])
+# @router.post('/request_email', description='No more than 10 requests per minute',
+#             dependencies=[Depends(RateLimiter(times=2, seconds=60))])
+@router.post('/request_email', description='No more than 2 requests per minute')
 async def request_email(body: RequestEmail, db: Session = Depends(get_db)):
     """
     Request for new verification email. Sends it or denies attempt if already confirmed.
@@ -123,8 +128,9 @@ async def request_email(body: RequestEmail, db: Session = Depends(get_db)):
     return {"message": "Check your email for confirmation."}
 
 
-@router.post('/reset_pwd', description='No more than 10 requests per minute',
-            dependencies=[Depends(RateLimiter(times=2, seconds=60))])
+# @router.post('/reset_pwd', description='No more than 10 requests per minute',
+#             dependencies=[Depends(RateLimiter(times=2, seconds=60))])
+@router.post('/reset_pwd', description='No more than 2 requests per minute')
 async def reset_pwd(body: RequestEmail, db: Session = Depends(get_db)):
     """
     Sends an email with reset password. Denies if user does not exist. Requires email address.

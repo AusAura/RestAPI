@@ -147,8 +147,10 @@ class Auth:
             ic('it is a JWT', e)
             raise credentials_exception
         
+        ic('Checking redis')
         user = ic(await self.r.get(f'user:{email}'))
         if user is None:
+            ic('2nd stage')
             user = await repository_users.get_user_by_email(email, db)
             if user is None:
                 raise credentials_exception

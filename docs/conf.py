@@ -1,4 +1,5 @@
 import sys, os
+sys.path.append(os.path.abspath('..'))
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -9,8 +10,8 @@ import sys, os
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'RestAPI'
-copyright = '2023, amarakheo@gmail.com'
-author = 'amarakheo@gmail.com'
+copyright = '2023, Oleksandr S.'
+author = 'Oleksandr S.'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
