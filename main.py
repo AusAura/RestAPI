@@ -15,6 +15,12 @@ from fastapi import APIRouter
 
 import uvicorn
 
+from src.routes.email import router as email_router
+from src.routes.auth import router as auth_router
+from src.routes.contacts import router as contacts_router
+
+from src.services.slowapi import limiter
+
 # alembic revision --autogenerate -m 'Init'
 # alembic upgrade head
 
@@ -23,13 +29,8 @@ import uvicorn
 
 # uvicorn main:app --host localhost --port 8000 --reload
 
+
 app = FastAPI()
-
-# auth_router = APIRouter(prefix='/auth', tags=['auth'])
-# email_router = APIRouter(prefix='/email', tags=['email'])
-# contacts_router = APIRouter(prefix='/contacts', tags=['contacts'])
-
-from src.services.slowapi import limiter
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -64,10 +65,6 @@ async def log_errors(request, call_next):
     except Exception as e:
         ic(f"Error: {e}")
         raise
-
-from src.routes.email import router as email_router
-from src.routes.auth import router as auth_router
-from src.routes.contacts import router as contacts_router
 
 app.include_router(email_router, prefix='/api')
 app.include_router(contacts_router, prefix='/api')
