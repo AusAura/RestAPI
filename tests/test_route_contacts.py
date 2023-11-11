@@ -1,6 +1,4 @@
-from unittest.mock import MagicMock, patch, AsyncMock
-from fastapi_limiter import FastAPILimiter
-
+from unittest.mock import MagicMock, patch
 import pytest
 
 from icecream import ic
@@ -8,17 +6,7 @@ from icecream import ic
 from src.services.auth import auth_service
 from src.database.models import User
 
-# pytest tests/test_route_contacts.py -v
-
-# from src.database.models import Contact
-
-    # get_contacts,
-    # get_contact,
-    # get_upcoming_birthdays,
-    # create_contact,
-    # update_contact,
-    # remove_contact,
-    # update_avatar,
+## pytest tests/test_route_contacts.py -v -s
 
 @pytest.fixture()
 def token(client, user, session, monkeypatch):
@@ -36,13 +24,8 @@ def token(client, user, session, monkeypatch):
     return data["access_token"]
 
 
-def test_create_contact(client, token, contact, monkeypatch):
+def test_create_contact(client, token, contact):
     ic('showtime!')
-    # with patch.object(auth_service, 'r') as r_mock:
-    #     r_mock.get.return_value = None
-    #     monkeypatch.setattr("fastapi_limiter.FastAPILimiter.redis", AsyncMock())
-    #     monkeypatch.setattr("fastapi_limiter.FastAPILimiter.identifier", AsyncMock())
-    #     monkeypatch.setattr("fastapi_limiter.FastAPILimiter.http_callback", AsyncMock())
     response = client.post(
             '/api/contacts/',
             json=contact,
@@ -53,19 +36,114 @@ def test_create_contact(client, token, contact, monkeypatch):
     data = response.json()
     assert data['fullname'] == 'testtest'
 
-
-def test_get_contacts(client, token, user):
-    # with patch.object(auth_service, 'r') as r_mock:
-    #     r_mock.get.return_value = None
-    #     monkeypatch.setattr("fastapi_limiter.FastAPILimiter.redis", AsyncMock())
-    #     monkeypatch.setattr("fastapi_limiter.FastAPILimiter.identifier", AsyncMock())
-    #     monkeypatch.setattr("fastapi_limiter.FastAPILimiter.http_callback", AsyncMock())
-    response = client.get(
-            '/api/contacts/',
-            headers={'Authorization': f'Bearer {token}'}
-            )
+def test_get_contacts(client, token, contact):
+    with patch.object(auth_service, 'r') as r_mock:
+        r_mock.get.return_value = None
+    
+        response = client.get(
+                    '/api/contacts/',
+                    headers={'Authorization': f'Bearer {token}'}
+                    )
         
     assert response.status_code == 200, response.text
     data = ic(response.json())
-    assert data[0]['user']['email'] == user.get('email')
-        # assert 'id' in data['user']
+    data = data[0]
+    assert data.get('email') == contact.get('email')
+    assert 'user_id' in data
+
+
+def test_get_contact(client, token, contact):
+    with patch.object(auth_service, 'r') as r_mock:
+        r_mock.get.return_value = None
+
+        response = client.get(
+                        '/api/contacts/test',
+                        headers={'Authorization': f'Bearer {token}'}
+                        )
+        
+    assert response.status_code == 200, response.text
+    data = ic(response.json())
+    assert data.get('email') == contact.get('email')
+    assert 'user_id' in data
+
+
+### Not functional due to using SQLite instead of Postgres during tests
+# def test_check_birthdays(client, token, contact):
+#     with patch.object(auth_service, 'r') as r_mock:
+#         r_mock.get.return_value = None
+#         response = client.get(
+#                         '/api/contacts/bd',
+#                         headers={'Authorization': f'Bearer {token}'}
+#                         ) 
+
+#     assert response.status_code == 200, response.text
+#     data = data[0]
+#     assert data.get('email') == contact.get('email')
+
+
+def test_update_contact(client, token, contact_2):
+    with patch.object(auth_service, 'r') as r_mock:
+        r_mock.get.return_value = None
+
+        response = client.put(
+                        '/api/contacts/1',
+                        json=contact_2,
+                        headers={'Authorization': f'Bearer {token}'}
+                        )
+        
+    assert response.status_code == 200, response.text
+    data = ic(response.json())
+    assert data.get('email') == contact_2.get('email')
+    assert 'user_id' in data
+
+
+def test_update_contact(client, token, contact_2):
+    with patch.object(auth_service, 'r') as r_mock:
+        r_mock.get.return_value = None
+
+        response = client.put(
+                        '/api/contacts/1',
+                        json=contact_2,
+                        headers={'Authorization': f'Bearer {token}'}
+                        )
+        
+    assert response.status_code == 200, response.text
+    data = ic(response.json())
+    assert data.get('email') == contact_2.get('email')
+    assert 'user_id' in data
+
+
+def test_update_avatar_contact(client, token, contact_2):
+    file_data = {"file": ("your_file_content_here", "filename.ext")}  # Замените на данные вашего файла
+    with patch.object(auth_service, 'r') as r_mock:
+        r_mock.get.return_value = None
+
+        with patch('src.routes.contacts.cloudinary.uploader.upload', return_value={'version': 'example_version'}):
+            with patch('src.routes.contacts.cloudinary.CloudinaryImage.build_url', return_value='example_url'):
+
+                response = client.patch(
+                        '/api/contacts/1/avatar',
+                        files=file_data,
+                        headers={'Authorization': f'Bearer {token}'}
+                        )
+        
+    assert response.status_code == 200, response.text
+    data = ic(response.json())
+    assert data.get('email') == contact_2.get('email')
+    assert 'user_id' in data
+
+def test_remove_contact(client, token, contact_2):
+    with patch.object(auth_service, 'r') as r_mock:
+        r_mock.get.return_value = None
+
+        response = client.delete(
+                        '/api/contacts/1',
+                        headers={'Authorization': f'Bearer {token}'}
+                        )
+        
+    assert response.status_code == 200, response.text
+    data = ic(response.json())
+    assert data.get('email') == contact_2.get('email')
+    assert 'user_id' in data
+    
+# pytest tests/test_route_contacts.py -v -s

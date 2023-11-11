@@ -81,3 +81,14 @@ def contact():
             'avatar': 'test-url'
     }
 
+@pytest.fixture(scope='module')
+def contact_2():
+    return {'fullname': 'somenewtest',
+            'email': 'newtest@mail.com',
+            'phone_number': 1,
+            'birthday': str(date(year=2022, month=2, day=13)),
+            'additional': 'newtest',
+            'user_id': 1,
+            'avatar': 'newtest-url'
+    }
+

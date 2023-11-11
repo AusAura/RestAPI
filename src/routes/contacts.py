@@ -135,7 +135,7 @@ async def update_contact(request: Request, body: ContactModel, contact_id: int, 
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Contact was not found')
     return contact
 
-@router.patch('/{contact_id}/avatar')
+@router.patch('/{contact_id}/avatar', response_model=ContactModel)
 @limiter.limit("10/minute")
 async def update_avatar_contact(request: Request, contact_id, file: UploadFile = File(), current_user: User = Depends(auth_service.get_current_user),
                              db: Session = Depends(get_db)):
