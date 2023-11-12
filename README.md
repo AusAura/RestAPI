@@ -1,5 +1,7 @@
-# RestAPI
+# RestAPI-JWT-ContactBook
 RESTful API built with FastAPI, based on Postgres (SQLAlchemy) + Redis (cache). Both are configured with Docker Compose. 
+
+Contact book with adding, reading, patching, deleting and closest-birthday-calculating functions.
 
 - Tests: Unittest + Pytest. 
 - Docs: Sphinx.
